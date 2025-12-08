@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     postgres_user: str = "postgres"
     postgres_password: str = "postgres"
     postgres_db: str = "aurora"
+    database_url: str = "postgresql+psycopg://aurora:aurora@aurora-postgres:5432/aurora"
 
     # Embedding provider
     embedding_provider: str = "ollama"

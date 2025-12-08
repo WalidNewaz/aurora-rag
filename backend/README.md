@@ -7,6 +7,12 @@
 poetry install
 ```
 
+## Launch DB
+
+```commandline
+docker compose up -d
+```
+
 ## Launch app
 
 ```commandline

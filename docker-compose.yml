@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  aurora-postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: aurora
+      POSTGRES_PASSWORD: aurora
+      POSTGRES_DB: aurora
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./backend/app/infrastructure/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
