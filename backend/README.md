@@ -57,6 +57,7 @@ We create the leanest set of canonical domain models we need for ingestion & RAG
 - `Document`
 - `Chunk`
 - `Site`
+- `CrawlState`
 
 ## Domain Service Interfaces (Abstractions)
 
@@ -65,6 +66,7 @@ These services describe *what* the system does, not *how*.
 - `VectorStore` interface
 - `EmbeddingProvider` interface
 - `Retriever` interface
+- `Crawler`
 
 ## Infrastructure Layer
 
