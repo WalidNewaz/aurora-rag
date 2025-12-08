@@ -49,3 +49,32 @@ app/
     config.py
     logging.py
 ```
+
+## Domain Layer — Core Entities
+
+We create the leanest set of canonical domain models we need for ingestion & RAG.
+
+- `Document`
+- `Chunk`
+- `Site`
+
+## Domain Service Interfaces (Abstractions)
+
+These services describe *what* the system does, not *how*.
+
+- `VectorStore` interface
+- `EmbeddingProvider` interface
+- `Retriever` interface
+
+## Infrastructure Layer
+
+- `DummyRetriever`
+
+## Dependency Injection Container
+
+- `Container`
+
+## First API Route
+
+
+
