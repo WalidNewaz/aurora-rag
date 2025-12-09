@@ -13,6 +13,7 @@ from app.application.use_cases.crawl_orchestrator import CrawlOrchestrator
 from app.domain.services.crawler import Crawler
 from app.core.database import Database
 from app.infrastructure.repositories.postgres_site_repository import PostgresSiteRepository
+from app.domain.repositories.site_repository import SiteRepository
 
 class Container:
 
@@ -35,6 +36,10 @@ class Container:
     @property
     def crawl_orchestrator(self) -> Crawler:
         return self._crawl_orchestrator
+
+    @property
+    def site_repository(self) -> SiteRepository:
+        return self._site_repository
 
 @lru_cache
 def get_container():

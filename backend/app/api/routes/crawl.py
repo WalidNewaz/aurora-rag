@@ -1,9 +1,17 @@
+# -------------------------------
+# Routes to manage crawl state.
+# This is part of the crawler.
+# -------------------------------
+
 from fastapi import APIRouter, Depends
 from app.core.container import get_container
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/crawl",
+    tags=["Crawl"],
+)
 
-@router.post("/crawl/{site_id}")
+@router.post("/{site_id}")
 async def crawl_site(site_id: str, container = Depends(get_container)):
     orchestrator = container.crawl_orchestrator
     await orchestrator.crawl_site(site_id)
