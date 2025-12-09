@@ -3,7 +3,7 @@ from datetime import datetime
 
 class Site(BaseModel):
     """The site registered"""
-    id: str = Field(...)
+    id: int = Field(...)
     url: str = Field(...)
     created_at: datetime = Field(...)
 
@@ -14,6 +14,6 @@ class SiteCreate(BaseModel):
 
 class SiteUpdate(BaseModel):
     """The site being updated"""
-    id: str = Field(...)
+    id: int = Field(...)
     url: str = Field(...)
 

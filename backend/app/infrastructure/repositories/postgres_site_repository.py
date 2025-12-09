@@ -15,7 +15,7 @@ class PostgresSiteRepository(SiteRepository):
         return Site(**row) if row else None
 
     async def create(self, url: str) -> Site:
-        row = await self.db.fetchone(
+        row = await self.db.execute(
             """
             INSERT INTO sites (url)
             VALUES (%(url)s)
@@ -29,7 +29,7 @@ class PostgresSiteRepository(SiteRepository):
         rows = await self.db.fetchall(
             "SELECT * FROM sites"
         )
-        return [] if rows else []
+        return rows
 
     async def get(self, site_id: int) -> Optional[Site]:
         row = await self.db.fetchone(

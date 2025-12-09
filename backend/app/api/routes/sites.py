@@ -18,11 +18,14 @@ router = APIRouter(
 async def get_sites(container=Depends(get_container)):
     repository = container.site_repository
     sites = await repository.get_all()
+    print(sites)
     return sites
 
 @router.post("", response_model=Site)
 async def create_site(site: SiteCreate, container=Depends(get_container)):
-    return {"site_id": "new-site"}
+    repository = container.site_repository
+    site = await repository.create(url=site.url)
+    return site
 
 @router.get("/{site_id}", response_model=Site)
 async def get_site(site_id: str, container=Depends(get_container)):
