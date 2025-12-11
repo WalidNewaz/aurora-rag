@@ -3,7 +3,7 @@
 # This is part of the crawler.
 # -------------------------------
 from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.container import get_container
 from app.api.schemas.sites import Site, SiteCreate, SiteUpdate
@@ -39,7 +39,20 @@ async def create_site(site: SiteCreate, container=Depends(get_container)):
 
 @router.get("/{site_id}", response_model=Site)
 async def get_site(site_id: str, container=Depends(get_container)):
-    return {"site_id": site_id, "seed_url": "https://www.walidnewaz.com/"}
+    repository = container.site_repository
+    site = await repository.get(site_id)
+    if not site:
+        raise HTTPException(status_code=404, detail="Site not found")
+    return Site(
+        id = site.id,
+        url = site.url,
+        name = site.name or "",
+        start_url = site.start_url or "",
+        allowed_domains = site.allowed_domains,
+        max_depth = site.max_depth,
+        created_at = site.created_at,
+        last_crawled_at = site.last_crawled_at,
+    )
 
 @router.put("/{site_id}", response_model=Site)
 async def update_site(site: SiteUpdate, container=Depends(get_container)):

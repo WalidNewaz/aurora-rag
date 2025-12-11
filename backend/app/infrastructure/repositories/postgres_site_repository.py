@@ -34,7 +34,7 @@ class PostgresSiteRepository(SiteRepository):
 
     async def get(self, site_id: int) -> Optional[Site]:
         row = await self.db.fetchone(
-            "SELECT id, url, created_at FROM sites WHERE id = %(id)s",
+            "SELECT * FROM sites WHERE id = %(id)s",
             {"id": site_id}
         )
         return Site(**row) if row else None
