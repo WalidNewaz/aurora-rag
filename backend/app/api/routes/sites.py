@@ -19,13 +19,22 @@ async def get_sites(container=Depends(get_container)):
     repository = container.site_repository
     sites = await repository.get_all()
     print(sites)
-    return sites
+    formatted_sites = [Site(
+        id = site['id'],
+        url = site['url'],
+        name = site['name'] or "",
+        start_url = site['start_url'] or "",
+        allowed_domains = site['allowed_domains'],
+        max_depth = site['max_depth'],
+        created_at = site['created_at'],
+    ) for site in sites]
+    return formatted_sites
 
 @router.post("", response_model=Site)
 async def create_site(site: SiteCreate, container=Depends(get_container)):
     repository = container.site_repository
-    site = await repository.create(url=site.url)
-    return site
+    new_site = await repository.create(url=site.url)
+    return new_site
 
 @router.get("/{site_id}", response_model=Site)
 async def get_site(site_id: str, container=Depends(get_container)):

@@ -1,8 +1,19 @@
+-- Sites management table
+
 CREATE TABLE IF NOT EXISTS sites (
     id SERIAL PRIMARY KEY,
-    url TEXT NOT NULL UNIQUE,
+    url TEXT NOT NULL UNIQUE,1
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+ALTER TABLE sites
+    ADD COLUMN IF NOT EXISTS name TEXT,
+    ADD COLUMN IF NOT EXISTS start_url TEXT,
+    ADD COLUMN IF NOT EXISTS allowed_domains TEXT[] DEFAULT '{}',
+    ADD COLUMN IF NOT EXISTS max_depth INTEGER DEFAULT 2;
+
+
+-- Job management table
 
 CREATE TABLE IF NOT EXISTS crawl_jobs (
     id SERIAL PRIMARY KEY,
@@ -21,3 +32,6 @@ CREATE TABLE IF NOT EXISTS pages (
     crawled_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE (site_id, url)
 );
+
+
+

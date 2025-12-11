@@ -15,13 +15,14 @@ class PostgresSiteRepository(SiteRepository):
         return Site(**row) if row else None
 
     async def create(self, url: str) -> Site:
-        row = await self.db.execute(
+        row = await self.db.fetchone(
             """
             INSERT INTO sites (url)
             VALUES (%(url)s)
             RETURNING id, url, created_at
             """,
-            {"url": url}
+            {"url": url},
+            True
         )
         return Site(**row)
 
