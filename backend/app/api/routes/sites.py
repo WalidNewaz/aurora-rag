@@ -27,6 +27,7 @@ async def get_sites(container=Depends(get_container)):
         allowed_domains = site['allowed_domains'],
         max_depth = site['max_depth'],
         created_at = site['created_at'],
+        last_crawled_at = site['last_crawled_at'],
     ) for site in sites]
     return formatted_sites
 

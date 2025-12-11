@@ -10,3 +10,4 @@ class Site:
     allowed_domains: list[str]
     max_depth: int
     created_at: datetime
+    last_crawled_at: datetime

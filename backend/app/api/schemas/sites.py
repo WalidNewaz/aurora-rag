@@ -3,13 +3,14 @@ from datetime import datetime
 
 class Site(BaseModel):
     """The site registered"""
-    id: int = Field(...)
-    url: str = Field(...)
-    name: str = Field(...)
-    start_url: str = Field(...)
+    id: int
+    url: str
+    name: str
+    start_url: str
     allowed_domains: list[str]
     max_depth: int
-    created_at: datetime = Field(...)
+    created_at: datetime
+    last_crawled_at: datetime | None = None
 
 class SiteCreate(BaseModel):
     """A site being registered"""
