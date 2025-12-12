@@ -43,6 +43,7 @@ async def get_site(site_id: str, container=Depends(get_container)):
     site = await repository.get(site_id)
     if not site:
         raise HTTPException(status_code=404, detail="Site not found")
+
     return Site(
         id = site.id,
         url = site.url,
@@ -55,8 +56,34 @@ async def get_site(site_id: str, container=Depends(get_container)):
     )
 
 @router.put("/{site_id}", response_model=Site)
-async def update_site(site: SiteUpdate, container=Depends(get_container)):
-    return {"site_id": site.site_id}
+async def update_site(
+        site_id: str,
+        site_update: SiteUpdate,
+        container=Depends(get_container)
+):
+    repository = container.site_repository
+
+    existing = await repository.get(site_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Site not found")
+
+    updated = await repository.update(site_id, site_update)
+    if not updated:
+        raise HTTPException(
+            status_code=400,
+            detail="No fields provided for update",
+        )
+
+    return Site(
+        id=updated.id,
+        url=updated.url,
+        name=updated.name or "",
+        start_url=updated.start_url or "",
+        allowed_domains=updated.allowed_domains,
+        max_depth=updated.max_depth,
+        created_at=updated.created_at,
+        last_crawled_at=updated.last_crawled_at,
+    )
 
 @router.delete("/{site_id}", response_model=Site)
 async def delete_site(site_id: str, container=Depends(get_container)):

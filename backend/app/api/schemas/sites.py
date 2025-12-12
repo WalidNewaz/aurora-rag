@@ -19,6 +19,10 @@ class SiteCreate(BaseModel):
 
 class SiteUpdate(BaseModel):
     """The site being updated"""
-    id: int = Field(...)
-    url: str = Field(...)
+    url: str | None = None
+    name: str | None = None
+    start_url: str | None = None
+    allowed_domains: list[str] | None = None
+    max_depth: int | None = None
+    last_crawled_at: datetime | None = None
 

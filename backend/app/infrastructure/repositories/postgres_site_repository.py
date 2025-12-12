@@ -1,6 +1,6 @@
 from typing import Optional, List
 from app.domain.repositories.site_repository import SiteRepository
-from app.domain.models.site import Site
+from app.domain.models.site import Site, SiteUpdate
 from app.core.database import Database
 
 class PostgresSiteRepository(SiteRepository):
@@ -39,11 +39,29 @@ class PostgresSiteRepository(SiteRepository):
         )
         return Site(**row) if row else None
 
-    async def update(self, site_id: int, url: str) -> Site:
-        row = await self.db.fetchone(
-            "SELECT id, url, created_at FROM sites WHERE id = %(id)s",
-            {"id": site_id}
-        )
+    async def update(self, site_id: int, updates: SiteUpdate) -> Optional[Site]:
+        update_data = updates.model_dump(exclude_unset=True)
+
+        if not update_data:
+            return None
+
+        set_clauses = []
+        params = {"id": site_id}
+
+        for field, value in update_data.items():
+            set_clauses.append(f"{field} = %({field})s")
+            params[field] = value
+
+        set_sql = ", ".join(set_clauses)
+
+        query = f"""
+                    UPDATE sites
+                    SET {set_sql}
+                    WHERE id = %(id)s
+                    RETURNING *
+                """
+
+        row = await self.db.fetchone(query, params)
         return Site(**row) if row else None
 
     async def delete(self, site_id: int) -> None:
