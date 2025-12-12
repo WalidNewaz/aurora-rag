@@ -18,7 +18,6 @@ router = APIRouter(
 async def get_sites(container=Depends(get_container)):
     repository = container.site_repository
     sites = await repository.get_all()
-    print(sites)
     formatted_sites = [Site(
         id = site['id'],
         url = site['url'],

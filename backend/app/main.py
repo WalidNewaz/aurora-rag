@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from app.core.settings import settings
 from app.api.routes import register_routes
+from app.middleware import register_middleware
 
 app = FastAPI(
     title="AuroraRAG Backend",
@@ -11,6 +12,9 @@ app = FastAPI(
 
 # Register all API routes
 register_routes(app)
+
+# Register all middleware
+register_middleware(app)
 
 @app.get("/health")
 def health():
