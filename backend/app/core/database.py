@@ -13,12 +13,12 @@ class Database:
                 self.dsn, row_factory=dict_row
             )
 
-    async def fetchone(self, query: str, params=None, write: bool = False):
+    async def fetchone(self, query: str, params=None, commit: bool = False):
         await self.connect()
         async with self._pool.cursor() as cur:
             await cur.execute(query, params or {})
             row = await cur.fetchone()
-            if write:
+            if commit:
                 await self._pool.commit()
             return row
 
