@@ -4,10 +4,18 @@ from app.core.settings import settings
 from app.api.routes import register_routes
 from app.middleware import register_middleware
 
+tags_metadata = [
+    {
+        "name": "Sites Management",
+        "description": "Endpoints related to the ingestion operations.",
+    },
+]
+
 app = FastAPI(
     title="AuroraRAG Backend",
     version="0.1.0",
-    description="RAG-based search engine backend."
+    description="RAG-based search engine backend.",
+    openapi_tags=tags_metadata
 )
 
 # Register all API routes

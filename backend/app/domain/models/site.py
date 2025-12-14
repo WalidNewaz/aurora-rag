@@ -12,6 +12,7 @@ class Site:
     allowed_domains: Optional[list[str]] = None
     max_depth: Optional[int] = None
     last_crawled_at: Optional[datetime] = None
+    source_id: Optional[int] = None
 
 @dataclass
 class SiteUpdate:

@@ -1,4 +1,5 @@
 from typing import Optional, List, Any
+
 from app.domain.repositories.site_repository import SiteRepository
 from app.domain.models.site import Site as SiteEntity
 from app.core.database import Database
@@ -25,23 +26,51 @@ class PostgresSiteRepository(SiteRepository):
         )
         return SiteEntity(**row) if row else None
 
-    async def create(self, url: str) -> SiteEntity:
-        row = await self.db.fetchone(
-            """
-            INSERT INTO sites (url)
-            VALUES (%(url)s)
-            RETURNING *
-            """,
-            {"url": url},
-            commit=True
-        )
-        return SiteEntity(**row)
-
     async def get_all(self) -> List[SiteEntity]:
         rows = await self.db.fetchall(
             "SELECT * FROM sites"
         )
         return [SiteEntity(**row) for row in rows]
+
+    async def create(
+            self,
+            url: str,
+            source_id: int,
+            name: str = "",
+            start_url: str = "",
+            allowed_domains: List[str] | None = None,
+            max_depth: int = 2,
+    ) -> SiteEntity:
+        row = await self.db.fetchone(
+            """
+            INSERT INTO sites (
+                url,
+                source_id,
+                name,
+                start_url,
+                allowed_domains,
+                max_depth
+            )
+            VALUES (
+                %(url)s,
+                %(source_id)s,
+                %(name)s,
+                %(start_url)s,
+                %(allowed_domains)s,
+                %(max_depth)s
+            )
+            RETURNING *
+            """,
+            {
+                "url": url,
+                "source_id": source_id,
+                "name": name,
+                "start_url": start_url,
+                "allowed_domains": allowed_domains or [],
+                "max_depth": max_depth,
+            },
+        )
+        return SiteEntity(**row)
 
     async def get(self, site_id: int) -> Optional[SiteEntity]:
         row = await self.db.fetchone(
@@ -70,16 +99,14 @@ class PostgresSiteRepository(SiteRepository):
             set_clauses.append(f"{field} = %({field})s")
             params[field] = value
 
-        set_sql = ", ".join(set_clauses)
-
         query = f"""
                     UPDATE sites
-                    SET {set_sql}
+                    SET {", ".join(set_clauses)}
                     WHERE id = %(id)s
                     RETURNING *
                 """
 
-        row = await self.db.fetchone(query, params, commit=True)
+        row = await self.db.fetchone(query, params)
         return SiteEntity(**row) if row else None
 
     async def delete(self, site_id: int) -> Optional[SiteEntity]:
@@ -90,7 +117,6 @@ class PostgresSiteRepository(SiteRepository):
             RETURNING *
             """,
             {"id": site_id},
-            commit=True
         )
 
         logger.info("Deleted site", extra={"site_id": site_id})

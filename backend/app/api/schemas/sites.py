@@ -11,16 +11,18 @@ class Site(BaseModel):
     max_depth: int
     created_at: datetime
     last_crawled_at: datetime | None = None
+    source_id: int = None
 
 class SiteCreate(BaseModel):
     """A site being registered"""
-    name: str = Field(...)
-    url: str = Field(...)
+    url: str
+    name: str | None = None
+    start_url: str | None = None
+    allowed_domains: list[str] = []
+    max_depth: int = 2
 
 class SiteUpdate(BaseModel):
-    """The site being updated"""
-    url: str | None = None
-    name: str | None = None
+    """Mutable operational fields for a site"""
     start_url: str | None = None
     allowed_domains: list[str] | None = None
     max_depth: int | None = None

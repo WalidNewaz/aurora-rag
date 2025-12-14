@@ -12,8 +12,12 @@ from app.domain.services.embedding_provider import EmbeddingProvider
 from app.application.use_cases.crawl_orchestrator import CrawlOrchestrator
 from app.domain.services.crawler import Crawler
 from app.core.database import Database
-from app.infrastructure.repositories.postgres_site_repository import PostgresSiteRepository
+
 from app.domain.repositories.site_repository import SiteRepository
+from app.infrastructure.repositories.postgres_site_repository import PostgresSiteRepository
+from app.domain.repositories.source_repository import SourceRepository
+from app.infrastructure.repositories.postgres_source_repository import PostgresSourceRepository
+
 
 class Container:
 
@@ -23,7 +27,12 @@ class Container:
         self._retriever = DummyRetriever()
         self._embedding_provider = DummyEmbeddingProvider()
         self._site_repository = PostgresSiteRepository(self._db)
+        self._source_repository = PostgresSourceRepository(self._db)
         self._crawl_orchestrator = CrawlOrchestrator(db=self._db, site_repository=self._site_repository)
+
+    @property
+    def db(self):
+        return self._db
 
     @property
     def retriever(self) -> Retriever:
@@ -40,6 +49,10 @@ class Container:
     @property
     def site_repository(self) -> SiteRepository:
         return self._site_repository
+
+    @property
+    def source_repository(self) -> SourceRepository:
+        return self._source_repository
 
 @lru_cache
 def get_container():
