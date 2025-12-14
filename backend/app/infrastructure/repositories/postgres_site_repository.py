@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 from typing import Optional, List, Any
+
+import psycopg
 
 from app.domain.repositories.site_repository import SiteRepository
 from app.domain.models.site import Site as SiteEntity
@@ -19,30 +23,18 @@ class PostgresSiteRepository(SiteRepository):
     def __init__(self, db: Database):
         self.db = db
 
-    async def get_by_url(self, url: str) -> Optional[SiteEntity]:
-        row = await self.db.fetchone(
-            "SELECT * FROM sites WHERE url = %(url)s",
-            {"url": url}
-        )
-        return SiteEntity(**row) if row else None
-
-    async def get_all(self) -> List[SiteEntity]:
-        rows = await self.db.fetchall(
-            "SELECT * FROM sites"
-        )
-        return [SiteEntity(**row) for row in rows]
-
     async def create(
             self,
+            *,
             url: str,
             source_id: int,
             name: str = "",
             start_url: str = "",
             allowed_domains: List[str] | None = None,
             max_depth: int = 2,
+            conn: psycopg.AsyncConnection | None = None,
     ) -> SiteEntity:
-        row = await self.db.fetchone(
-            """
+        query = """
             INSERT INTO sites (
                 url,
                 source_id,
@@ -60,66 +52,130 @@ class PostgresSiteRepository(SiteRepository):
                 %(max_depth)s
             )
             RETURNING *
-            """,
-            {
+            """
+        params = {
                 "url": url,
                 "source_id": source_id,
                 "name": name,
                 "start_url": start_url,
                 "allowed_domains": allowed_domains or [],
                 "max_depth": max_depth,
-            },
-        )
+            }
+        row = await self._fetchone(query, params, conn=conn)
+        logger.info("Created site", extra={"site_id": row["id"]})
         return SiteEntity(**row)
 
-    async def get(self, site_id: int) -> Optional[SiteEntity]:
-        row = await self.db.fetchone(
-            "SELECT * FROM sites WHERE id = %(id)s",
-            {"id": site_id}
-        )
+    async def get_all(
+            self,
+            *,
+            conn: psycopg.AsyncConnection | None = None
+    ) -> List[SiteEntity]:
+        query = "SELECT * FROM sites"
+        rows = await self._fetchall(query, conn=conn)
+        return [SiteEntity(**row) for row in rows]
+
+    async def get(
+            self,
+            site_id: int,
+            *,
+            conn: psycopg.AsyncConnection | None = None
+    ) -> Optional[SiteEntity]:
+        query = "SELECT * FROM sites WHERE id = %(site_id)s"
+        params = {"site_id": site_id}
+        row = await self._fetchone(query, params, conn=conn)
+        return SiteEntity(**row) if row else None
+
+    async def get_by_url(
+            self,
+            url: str,
+            *,
+            conn: psycopg.AsyncConnection | None = None
+    ) -> Optional[SiteEntity]:
+        query = "SELECT * FROM sites WHERE url = %(url)s"
+        params = {"url": url}
+        row = await self._fetchone(query, params, conn=conn)
+        return SiteEntity(**row) if row else None
+
+    async def get_by_source_id(
+            self,
+            source_id: int,
+            *,
+            conn: psycopg.AsyncConnection | None = None
+    ) -> Optional[SiteEntity]:
+        query = "SELECT * FROM sites WHERE source_id = %(source_id)s"
+        params = {"source_id": source_id}
+        row = await self._fetchone(query, params, conn=conn)
         return SiteEntity(**row) if row else None
 
     async def update(
             self,
             site_id: int,
             updates: dict[str, Any],
+            *,
+            conn: psycopg.AsyncConnection | None = None,
     ) -> Optional[SiteEntity]:
         update_data = {
             k: v for k, v in updates.items()
             if k in ALLOWED_UPDATE_FIELDS
         }
-
         if not update_data:
             return None
 
-        set_clauses = []
-        params = {"id": site_id}
-
-        for field, value in update_data.items():
-            set_clauses.append(f"{field} = %({field})s")
-            params[field] = value
+        set_sql = ", ".join([f"{k} = %({k})s" for k in update_data.keys()])
+        params = {"id": site_id, **update_data}
 
         query = f"""
                     UPDATE sites
-                    SET {", ".join(set_clauses)}
+                    SET {set_sql}
                     WHERE id = %(id)s
                     RETURNING *
                 """
 
-        row = await self.db.fetchone(query, params)
+        row = await self._fetchone(query, params, conn=conn)
         return SiteEntity(**row) if row else None
 
-    async def delete(self, site_id: int) -> Optional[SiteEntity]:
-        row = await self.db.fetchone(
-            """
+    async def delete(
+            self,
+            site_id: int,
+            *,
+            conn: psycopg.AsyncConnection | None = None,
+    ) -> Optional[SiteEntity]:
+        query = """
             DELETE FROM sites
             WHERE id = %(id)s
             RETURNING *
-            """,
-            {"id": site_id},
-        )
-
+            """
+        params = {"id": site_id}
+        row = await self._fetchone(query, params, conn=conn)
         logger.info("Deleted site", extra={"site_id": site_id})
         return SiteEntity(**row) if row else None
+
+    async def _fetchone(
+            self,
+            query: str,
+            params: dict[str, Any],
+            *,
+            conn: psycopg.AsyncConnection | None,
+    ):
+        if conn is None:
+            return await self.db.fetchone(query, params)
+
+        async with conn.cursor() as cur:
+            await cur.execute(query, params)
+            return await cur.fetchone()
+
+
+    async def _fetchall(
+            self,
+            query: str,
+            *,
+            conn: psycopg.AsyncConnection | None,
+    ):
+        if conn is None:
+            return await self.db.fetchall()
+
+        async with conn.cursor() as cur:
+            await cur.execute(query)
+            return await cur.fetchall()
 
 

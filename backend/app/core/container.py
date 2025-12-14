@@ -13,10 +13,16 @@ from app.application.use_cases.crawl_orchestrator import CrawlOrchestrator
 from app.domain.services.crawler import Crawler
 from app.core.database import Database
 
+# Repositories
 from app.domain.repositories.site_repository import SiteRepository
 from app.infrastructure.repositories.postgres_site_repository import PostgresSiteRepository
 from app.domain.repositories.source_repository import SourceRepository
 from app.infrastructure.repositories.postgres_source_repository import PostgresSourceRepository
+
+# Source Handlers
+from app.application.ingestion.ingestion_coordinator import IngestionCoordinator
+from app.domain.ingestion.source_handler import SourceHandler
+from app.infrastructure.ingestion.handlers.web_source_handler import WebSourceHandler
 
 
 class Container:
@@ -24,11 +30,25 @@ class Container:
     def __init__(self, settings):
         self._settings = settings
         self._db = Database(self._settings.database_url)
-        self._retriever = DummyRetriever()
-        self._embedding_provider = DummyEmbeddingProvider()
+        # register repositories
         self._site_repository = PostgresSiteRepository(self._db)
         self._source_repository = PostgresSourceRepository(self._db)
+        # register source handlers
+        self._web_source_handler = WebSourceHandler(
+            site_repo = self._site_repository
+        )
+        self._ingestion_coordinator = IngestionCoordinator(
+            handlers={
+                "web": self._web_source_handler,
+            }
+        )
+        # register crawlers
         self._crawl_orchestrator = CrawlOrchestrator(db=self._db, site_repository=self._site_repository)
+        # Register embedder
+        self._embedding_provider = DummyEmbeddingProvider()
+        # register retriever
+        self._retriever = DummyRetriever()
+
 
     @property
     def db(self):
@@ -53,6 +73,10 @@ class Container:
     @property
     def source_repository(self) -> SourceRepository:
         return self._source_repository
+
+    @property
+    def ingestion_coordinator(self) -> IngestionCoordinator:
+        return self._ingestion_coordinator
 
 @lru_cache
 def get_container():
