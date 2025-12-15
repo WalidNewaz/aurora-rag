@@ -2,6 +2,7 @@ import psycopg
 
 from app.domain.ingestion.source_handler import SourceHandler
 from app.domain.models.source import Source
+from app.domain.models.artifact import Artifact
 from app.domain.repositories.site_repository import SiteRepository
 from app.core.logging import logger
 
@@ -73,3 +74,18 @@ class WebSourceHandler(SourceHandler):
         if site:
             await self.site_repo.delete(site.id, conn=conn)
             logger.info("Deleted site", extra={"site_id": site.id})
+
+    async def on_artifact_created(self, artifact: Artifact) -> None:
+        logger.info(
+            "Web artifact uploaded",
+            extra={
+                "artifact_id": artifact.id,
+                "mime": artifact.mime_type,
+                "path": artifact.path,
+            },
+        )
+
+        # FUTURE:
+        # - HTML → Document
+        # - PDF → OCR / text extract
+        # - ZIP → explode → new artifacts

@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     postgres_db: str = "aurora"
     database_url: str = "postgresql://aurora:aurora@localhost:5432/aurora"
 
+    # Artifact handling
+    upload_dir: str = "data/uploads"
+
     # Embedding provider
     embedding_provider: str = "ollama"
 

@@ -24,3 +24,5 @@
 /htmlcov
 
 **/test.db
+
+**/uploads/*

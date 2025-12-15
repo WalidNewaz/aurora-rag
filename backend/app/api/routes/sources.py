@@ -3,7 +3,7 @@
 # This is part of the ingestion pipeline.
 # -------------------------------
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 
 from app.core.container import get_container
 from app.api.schemas.sources import (
@@ -125,4 +125,63 @@ async def update_source(
         await coordinator.on_source_updated(updated, conn=conn)
 
     return updated
+
+
+@router.delete("/{source_id}", response_model=SourceSchema)
+async def delete_source(
+    source_id: int,
+    container=Depends(get_container),
+) -> SourceSchema:
+    """
+    Delete a source and all derived ingestion state.
+    """
+    source_repo = container.source_repository
+    coordinator = container.ingestion_coordinator
+    db = container.db
+
+    async with db.transaction() as conn:
+        source = await source_repo.delete(source_id, conn=conn)
+        if not source:
+            raise HTTPException(status_code=404, detail="Source not found")
+
+        await coordinator.on_source_deleted(source, conn=conn)
+
+    return source
+
+
+@router.post(
+    "/{source_id}/upload",
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def upload_artifact(
+    source_id: int,
+    file: UploadFile,
+    container=Depends(get_container),
+):
+    """
+    Upload a binary artifact for a source.
+    """
+    source_repo = container.source_repository
+    artifact_service = container.artifact_service
+    coordinator = container.ingestion_coordinator
+    db = container.db
+
+    async with db.transaction() as conn:
+        source = await source_repo.get(source_id, conn=conn)
+        if not source:
+            raise HTTPException(status_code=404, detail="Source not found")
+
+        artifact = await artifact_service.store_upload(
+            source_id=source.id,
+            file=file,
+            conn=conn,
+        )
+
+        # Schedule ingestion asynchronously
+        await coordinator.on_artifact_created(artifact)
+
+    return {
+        "artifact_id": artifact.id,
+        "status": "uploaded",
+    }
 

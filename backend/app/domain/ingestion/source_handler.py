@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+
+from app.domain.models.artifact import Artifact
 from app.domain.models.source import Source
 
 class SourceHandler(ABC):
@@ -18,4 +20,8 @@ class SourceHandler(ABC):
 
     @abstractmethod
     async def on_deleted(self, source: Source) -> None:
+        ...
+
+    @abstractmethod
+    async def on_artifact_created(self, artifact: Artifact) -> None:
         ...

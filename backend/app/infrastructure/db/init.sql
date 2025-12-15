@@ -9,6 +9,26 @@ CREATE TABLE IF NOT EXISTS sources
     created_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+
+-- Job management table
+
+CREATE TABLE IF NOT EXISTS crawl_jobs (
+    id SERIAL PRIMARY KEY,
+    site_id INTEGER NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+    status TEXT NOT NULL,  -- 'pending', 'running', 'completed', 'failed'
+    started_at TIMESTAMP WITH TIME ZONE,
+    finished_at TIMESTAMP WITH TIME ZONE,
+    error TEXT
+);
+
+ALTER TABLE crawl_jobs
+ADD COLUMN source_id INTEGER,
+ADD CONSTRAINT crawl_jobs_source_id_fkey
+    FOREIGN KEY (source_id)
+    REFERENCES sources (id)
+    ON DELETE CASCADE;
+
+
 CREATE TABLE IF NOT EXISTS sites (
     id SERIAL PRIMARY KEY,
     url TEXT NOT NULL UNIQUE,1
@@ -28,23 +48,16 @@ ALTER TABLE sites
         ON DELETE CASCADE;
 
 
--- Job management table
-
-CREATE TABLE IF NOT EXISTS crawl_jobs (
+-- Artifact management
+CREATE TABLE artifacts (
     id SERIAL PRIMARY KEY,
-    site_id INTEGER NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
-    status TEXT NOT NULL,  -- 'pending', 'running', 'completed', 'failed'
-    started_at TIMESTAMP WITH TIME ZONE,
-    finished_at TIMESTAMP WITH TIME ZONE,
-    error TEXT
+    source_id INTEGER NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+    type TEXT NOT NULL,               -- "upload", "crawl", "sync"
+    mime_type TEXT NOT NULL,
+    path TEXT NOT NULL,               -- filesystem / object-store path
+    size_bytes BIGINT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-
-ALTER TABLE crawl_jobs
-ADD COLUMN source_id INTEGER,
-ADD CONSTRAINT crawl_jobs_source_id_fkey
-    FOREIGN KEY (source_id)
-    REFERENCES sources (id)
-    ON DELETE CASCADE;
 
 CREATE TABLE IF NOT EXISTS pages (
     id SERIAL PRIMARY KEY,

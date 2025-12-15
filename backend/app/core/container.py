@@ -24,16 +24,20 @@ from app.application.ingestion.ingestion_coordinator import IngestionCoordinator
 from app.domain.ingestion.source_handler import SourceHandler
 from app.infrastructure.ingestion.handlers.web_source_handler import WebSourceHandler
 
+# Artifact Handlers
+from app.application.artifacts.artifact_service import ArtifactService
+from app.infrastructure.repositories.postgres_artifact_repository import PostgresArtifactRepository
+
 
 class Container:
 
     def __init__(self, settings):
         self._settings = settings
         self._db = Database(self._settings.database_url)
-        # register repositories
+        # repositories
         self._site_repository = PostgresSiteRepository(self._db)
         self._source_repository = PostgresSourceRepository(self._db)
-        # register source handlers
+        # source handlers
         self._web_source_handler = WebSourceHandler(
             site_repo = self._site_repository
         )
@@ -42,11 +46,17 @@ class Container:
                 "web": self._web_source_handler,
             }
         )
-        # register crawlers
+        # artifact handler
+        self._artifact_repository = PostgresArtifactRepository()
+        self._artifact_service = ArtifactService(
+            artifact_repo=self._artifact_repository,
+            upload_root=settings.upload_dir,
+        )
+        # crawlers
         self._crawl_orchestrator = CrawlOrchestrator(db=self._db, site_repository=self._site_repository)
-        # Register embedder
+        # embedder
         self._embedding_provider = DummyEmbeddingProvider()
-        # register retriever
+        # retriever
         self._retriever = DummyRetriever()
 
 
@@ -77,6 +87,10 @@ class Container:
     @property
     def ingestion_coordinator(self) -> IngestionCoordinator:
         return self._ingestion_coordinator
+
+    @property
+    def artifact_service(self) -> ArtifactService:
+        return self._artifact_service
 
 @lru_cache
 def get_container():
