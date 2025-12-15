@@ -19,3 +19,12 @@ class ArtifactRepository(ABC):
         conn: psycopg.AsyncConnection,
     ) -> Artifact:
         ...
+
+    @abstractmethod
+    async def delete(
+            self,
+            artifact_id: int,
+            *,
+            conn: psycopg.AsyncConnection
+    ) -> Optional[Artifact]:
+        ...

@@ -74,18 +74,3 @@ class WebSourceHandler(SourceHandler):
         if site:
             await self.site_repo.delete(site.id, conn=conn)
             logger.info("Deleted site", extra={"site_id": site.id})
-
-    async def on_artifact_created(self, artifact: Artifact) -> None:
-        logger.info(
-            "Web artifact uploaded",
-            extra={
-                "artifact_id": artifact.id,
-                "mime": artifact.mime_type,
-                "path": artifact.path,
-            },
-        )
-
-        # FUTURE:
-        # - HTML → Document
-        # - PDF → OCR / text extract
-        # - ZIP → explode → new artifacts

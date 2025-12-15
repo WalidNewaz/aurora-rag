@@ -41,7 +41,7 @@ ALTER TABLE sites
     ADD COLUMN IF NOT EXISTS allowed_domains TEXT[] DEFAULT '{}',
     ADD COLUMN IF NOT EXISTS max_depth INTEGER DEFAULT 2,
     ADD COLUMN IF NOT EXISTS last_crawled_at TIMESTAMP WITH TIME ZONE,
-    ADD COLUMN source_id INTEGER UNIQUE,
+    ADD COLUMN IF NOT EXISTS source_id INTEGER UNIQUE,
     ADD CONSTRAINT sites_source_id_fkey,
         FOREIGN KEY (source_id)
         REFERENCES sources (id)
@@ -58,6 +58,13 @@ CREATE TABLE artifacts (
     size_bytes BIGINT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+ALTER TABLE artifacts
+    ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'created',
+    ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}',
+    ADD COLUMN IF NOT EXISTS error TEXT,
+    ADD COLUMN IF NOT EXISTS content_hash TEXT;
+
 
 CREATE TABLE IF NOT EXISTS pages (
     id SERIAL PRIMARY KEY,

@@ -26,6 +26,8 @@ from app.infrastructure.ingestion.handlers.web_source_handler import WebSourceHa
 
 # Artifact Handlers
 from app.application.artifacts.artifact_service import ArtifactService
+from app.domain.ingestion.artifact_handler import ArtifactHandler
+from app.infrastructure.ingestion.handlers.noop_artifact_handler import NoOpArtifactHandler
 from app.infrastructure.repositories.postgres_artifact_repository import PostgresArtifactRepository
 
 
@@ -37,25 +39,30 @@ class Container:
         # repositories
         self._site_repository = PostgresSiteRepository(self._db)
         self._source_repository = PostgresSourceRepository(self._db)
+        self._artifact_repository = PostgresArtifactRepository(self._db)
         # source handlers
         self._web_source_handler = WebSourceHandler(
             site_repo = self._site_repository
         )
-        self._ingestion_coordinator = IngestionCoordinator(
-            handlers={
-                "web": self._web_source_handler,
-            }
-        )
         # artifact handler
-        self._artifact_repository = PostgresArtifactRepository()
         self._artifact_service = ArtifactService(
             artifact_repo=self._artifact_repository,
             upload_root=settings.upload_dir,
         )
+        self._noop_artifact_handler = NoOpArtifactHandler()
         # crawlers
         self._crawl_orchestrator = CrawlOrchestrator(db=self._db, site_repository=self._site_repository)
         # embedder
         self._embedding_provider = DummyEmbeddingProvider()
+        # Ingestion Coordinator
+        self._ingestion_coordinator = IngestionCoordinator(
+            source_handlers={
+                "web": self._web_source_handler,
+            },
+            artifact_handlers={
+                "*": self._noop_artifact_handler
+            }
+        )
         # retriever
         self._retriever = DummyRetriever()
 

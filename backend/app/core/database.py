@@ -54,16 +54,6 @@ class Database:
             async with conn.transaction():
                 yield conn
 
-    # @asynccontextmanager
-    # async def transaction(self):
-    #     await self.connect()
-    #     try:
-    #         async with self._conn.transaction():
-    #             yield
-    #     except Exception:
-    #         # psycopg automatically rolls back on exception
-    #         raise
-
     # ---------------------------------------
     # Convenience methods (non-transactional)
     # Use only for read-only queries, or simple writes where
